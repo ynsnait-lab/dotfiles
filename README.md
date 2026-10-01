@@ -8,6 +8,7 @@ La config de mon terminal et la liste de mes paquets, pour tout retrouver en 5 m
 | `.zprofile` | PATH Homebrew et Python au démarrage | `~/.zprofile` |
 | `.gitconfig` | identité Git, diffs avec delta | `~/.gitconfig` |
 | `Brewfile` | tous les paquets Homebrew, apps (casks), extensions VS Code, outils uv et npm | `~/Brewfile` |
+| `macos-defaults.sh` | réglages cachés macOS (Finder, Dock, bureaux, .DS_Store) — relançable | — |
 
 Les fichiers du Mac sont des **liens symboliques** vers ce dossier : modifier `~/.zshrc`, c'est modifier `~/dotfiles/.zshrc`.
 
@@ -28,6 +29,6 @@ git clone https://github.com/ynsnait-lab/dotfiles.git ~/dotfiles
 ~/dotfiles/install.sh
 ```
 
-`install.sh` met de côté les fichiers existants dans `~/.dotfiles-backup-<date>/`, crée les liens, puis réinstalle tout le Brewfile.
+`install.sh` met de côté les fichiers existants dans `~/.dotfiles-backup-<date>/`, crée les liens, puis réinstalle tout le Brewfile. Lance ensuite `~/dotfiles/macos-defaults.sh` pour retrouver les réglages du Finder et du Dock.
 
 Le détail de chaque commande est dans la fiche « Power User Mac » (Bureau › Shortcuts).
