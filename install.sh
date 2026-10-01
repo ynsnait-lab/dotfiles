@@ -14,6 +14,13 @@ for f in .zshrc .zprofile .gitconfig Brewfile; do
   echo "lien : $target -> $DIR/$f"
 done
 
+# outils maison : scripts de ~/dotfiles/bin + OCR (compilé avec le Swift d'Apple)
+chmod +x "$DIR"/bin/* 2>/dev/null
+mkdir -p "$HOME/.local/bin" "$HOME/.config/notif"
+xcrun swiftc -O "$DIR/bin/ocr.swift" -o "$HOME/.local/bin/ocr" 2>/dev/null && echo "ocr compilé" || echo "ocr : installe les outils Xcode (xcode-select --install)"
+[[ -s "$HOME/.config/notif/topic" ]] || echo "notifs iPhone : mets ton canal ntfy dans ~/.config/notif/topic"
+open "$DIR"/shortcuts/*.shortcut 2>/dev/null   # propose d'ajouter les raccourcis dans l'app Raccourcis
+
 if command -v brew >/dev/null; then
   brew bundle install --file="$DIR/Brewfile"
 else

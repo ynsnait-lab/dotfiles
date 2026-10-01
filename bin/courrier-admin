@@ -1,0 +1,31 @@
+#!/bin/zsh
+# courrier-admin [texte] — appelé par le raccourci « 📬 Courrier admin → Rappel »
+#   (automatisation « Lorsque je reçois une notification de Mail »). Lit la notification sur l'entrée standard.
+#   Si elle vient d'un organisme (liste ci-dessous), crée un rappel « 📬 À traiter » dans la liste TO-DO,
+#   avec alerte aujourd'hui 18 h (ou demain 9 h s'il est déjà tard) : il sonne aussi sur l'iPhone.
+export PATH="$HOME/dotfiles/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+LISTE="TO-DO"
+ORGANISMES='ameli|cpam|assurance maladie|urssaf|impots|impôts|dgfip|finances publiques|france travail|action logement|mobili-jeune|(^|[^a-z])caf([^a-z]|$)'
+log="$HOME/Library/Logs/courrier-admin.log"
+
+txt=$( { [[ -t 0 ]] || cat; print -r -- "$*"; } | sed '/^[[:space:]]*$/d')
+print -r -- "$(date '+%F %T') reçu : ${txt//$'\n'/ ⏎ }" >> "$log"
+[[ ${txt:l} =~ $ORGANISMES ]] || exit 0
+
+resume=${txt//$'\n'/ · }
+titre="📬 À traiter : ${resume[1,90]}"
+/usr/bin/osascript - "$titre" "$txt" "$LISTE" <<'APPLESCRIPT' >> "$log" 2>&1
+on run argv
+  set {t, b, l} to argv
+  set d to current date
+  if (time of d) < (17 * hours) then
+    set time of d to 18 * hours
+  else
+    set d to d + days
+    set time of d to 9 * hours
+  end if
+  tell application "Reminders" to tell list l to make new reminder with properties {name:t, body:b, due date:d, remind me date:d}
+  return "rappel créé pour " & (d as string)
+end run
+APPLESCRIPT
+notif -i -t "📬 Courrier admin" "Ajouté à tes rappels : ${resume[1,120]}"

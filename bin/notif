@@ -1,0 +1,24 @@
+#!/bin/zsh
+# notif [-i] [-t titre] [-g tags] message…
+#   Notification sur le Mac + sur l'iPhone (app ntfy, canal lu dans ~/.config/notif/topic, hors Git).
+#   -i : n'envoie sur l'iPhone que si tu n'es pas devant le Mac (aucune activité depuis $NOTIF_IDLE s, 60 par défaut)
+#   -t : titre (défaut « Mac »)    -g : tags ntfy séparés par des virgules (ex : white_check_mark, x)
+title="Mac"; only_if_away=0; tags=""
+while getopts "it:g:" o; do
+  case $o in i) only_if_away=1;; t) title=$OPTARG;; g) tags=$OPTARG;; esac
+done
+shift $((OPTIND - 1))
+msg="${*:-Terminé}"
+topic=$(cat "$HOME/.config/notif/topic" 2>/dev/null)
+
+# 1. notification sur le Mac
+esc() { local s=${1//\\/\\\\}; print -r -- "${s//\"/\\\"}"; }
+/usr/bin/osascript -e "display notification \"$(esc "$msg")\" with title \"$(esc "$title")\" sound name \"Glass\"" >/dev/null 2>&1
+
+# 2. notification sur l'iPhone
+idle=$(/usr/sbin/ioreg -c IOHIDSystem | /usr/bin/awk '/HIDIdleTime/ {print int($NF/1000000000); exit}')
+if [[ -n $topic ]] && { (( ! only_if_away )) || (( ${idle:-0} >= ${NOTIF_IDLE:-60} )); }; then
+  /usr/bin/jq -n --arg t "$topic" --arg ti "$title" --arg m "$msg" --arg g "$tags" \
+    '{topic:$t, title:$ti, message:$m} + (if $g != "" then {tags:($g | split(","))} else {} end)' |
+    /usr/bin/curl -s -m 10 -o /dev/null -H "Content-Type: application/json" -d @- https://ntfy.sh/
+fi

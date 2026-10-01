@@ -8,6 +8,8 @@ La config de mon terminal et la liste de mes paquets, pour tout retrouver en 5 m
 | `.zprofile` | PATH Homebrew et Python au démarrage | `~/.zprofile` |
 | `.gitconfig` | identité Git, diffs avec delta | `~/.gitconfig` |
 | `Brewfile` | tous les paquets Homebrew, apps (casks), extensions VS Code, outils uv et npm | `~/Brewfile` |
+| `bin/` | `notif`, `range-capture`, `courrier-admin`, `ocr.swift` : les scripts appelés par le terminal et par les raccourcis | `~/dotfiles/bin` (dans le PATH) |
+| `shortcuts/` | raccourcis signés « Ranger la capture » et « Courrier admin vers Rappel » (double-clic pour les ajouter) | app Raccourcis |
 | `macos-defaults.sh` | réglages cachés macOS (Finder, Dock, bureaux, .DS_Store) — relançable | — |
 
 Les fichiers du Mac sont des **liens symboliques** vers ce dossier : modifier `~/.zshrc`, c'est modifier `~/dotfiles/.zshrc`.
@@ -19,6 +21,12 @@ maj          # met tout à jour (Homebrew, outils uv, App Store si mas est insta
 brewsave     # réécrit le Brewfile avec ce qui est installé
 cd ~/dotfiles && git add -A && git commit -m "maj config" && git push   # sauvegarder sur GitHub
 ```
+
+## Automatisations
+
+- **Fin de tâche** : toute commande de plus de 60 s envoie une notif (Mac, et iPhone si tu n'es pas devant). `fini <commande>` force la notif, `maj` en envoie une à la fin. Canal ntfy dans `~/.config/notif/topic` (hors Git).
+- **Captures d'écran** : automatisation Raccourcis « capture enregistrée » → `range-capture` (Images › Captures › AAAA-MM, nom de l'app, texte cherchable avec Spotlight).
+- **Courrier admin** : automatisation « notification de Mail » → `courrier-admin` (rappel « À traiter » dans TO-DO si ameli, CPAM, URSSAF, impôts, CAF…). Journal : `~/Library/Logs/courrier-admin.log`.
 
 ## Sur un nouveau Mac
 
