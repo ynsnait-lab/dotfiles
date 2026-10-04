@@ -21,6 +21,8 @@ for f in "$@"; do
   dest="$dir/$ts — $app.$ext"; n=2
   while [[ -e $dest ]]; do dest="$dir/$ts — $app ($n).$ext"; (( n++ )); done
   mv -n "$f" "$dest" || continue
+  # trace dans le journal du rangeur (~/Downloads/_OÙ SONT MES FICHIERS.md)
+  command -v rangeur >/dev/null && rangeur --noter "$f" "$dest" "capture rangée (renommée, texte reconnu)" >/dev/null 2>&1
 
   if [[ $ext == (png|jpg|jpeg|heic|tiff) ]] && command -v ocr >/dev/null; then
     txt=$(ocr "$dest" 2>/dev/null | head -c 2000)
