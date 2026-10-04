@@ -1,8 +1,11 @@
 #!/bin/zsh
-# range-capture fichier… — appelé par le raccourci « 📸 Ranger la capture » (automatisation de capture d'écran).
+# range-capture fichier… — range une capture d'écran.
 #   Déplace chaque capture dans ~/Pictures/Captures/AAAA-MM/, la renomme « AAAA-MM-JJ HH.MM.SS — App.png »
-#   (app au premier plan au moment de la capture) et met le texte reconnu (OCR) dans le commentaire
-#   Spotlight du fichier : la capture devient cherchable avec ⌘Espace par les mots qu'elle contient.
+#   et met le texte reconnu (OCR) dans le commentaire Spotlight : la capture devient cherchable avec ⌘Espace.
+#
+#   Captures en différé (24 h) : les captures arrivent dans Téléchargements. Si ce script y est appelé
+#   directement (par l'ancien raccourci « 📸 Ranger la capture »), il les y laisse. C'est le rangeur
+#   (github.com/ynsnait-lab/rangeur) qui le rappelle 24 h plus tard, avec RANGEUR_SOUS_COMMANDE=1.
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 root="${CAPTURES_DIR:-$HOME/Pictures/Captures}"
 log="$HOME/Library/Logs/range-capture.log"
@@ -11,9 +14,15 @@ log="$HOME/Library/Logs/range-capture.log"
 app=$(lsappinfo info "$(lsappinfo front)" 2>/dev/null | head -1 | sed -nE 's/^"([^"]*)".*/\1/p')
 case $app in ""|screencaptureui|"Capture d’écran"|Screenshot|loginwindow|Shortcuts|Raccourcis) app="Capture";; esac
 app=${app//[\/:]/-}
+attente="${CAPTURES_ATTENTE:-$HOME/Downloads}"
+sous_rangeur=${RANGEUR_SOUS_COMMANDE:-}
+[[ -n $sous_rangeur ]] && app="Capture"   # 24 h après, l'app au premier plan n'a plus de sens
 
 for f in "$@"; do
   [[ -f $f ]] || { print -r -- "$(date '+%F %T') ignoré (introuvable) : $f" >> "$log"; continue; }
+  if [[ -z $sous_rangeur && ${f:A:h} == ${attente:A} ]]; then
+    print -r -- "$(date '+%F %T') laissée 24 h dans Téléchargements (le rangeur s'en occupera) : $f" >> "$log"; continue
+  fi
   ts=$(stat -f %SB -t "%Y-%m-%d %H.%M.%S" "$f")
   dir="$root/${ts[1,7]}"
   ext=${f:e:l}
@@ -22,7 +31,7 @@ for f in "$@"; do
   while [[ -e $dest ]]; do dest="$dir/$ts — $app ($n).$ext"; (( n++ )); done
   mv -n "$f" "$dest" || continue
   # trace dans le journal du rangeur (~/Downloads/_OÙ SONT MES FICHIERS.md)
-  command -v rangeur >/dev/null && rangeur --noter "$f" "$dest" "capture rangée (renommée, texte reconnu)" >/dev/null 2>&1
+  [[ -z $sous_rangeur ]] && command -v rangeur >/dev/null && rangeur --noter "$f" "$dest" "capture rangée (renommée, texte reconnu)" >/dev/null 2>&1
 
   if [[ $ext == (png|jpg|jpeg|heic|tiff) ]] && command -v ocr >/dev/null; then
     txt=$(ocr "$dest" 2>/dev/null | head -c 2000)
